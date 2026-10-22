@@ -296,12 +296,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
 <script type="module">
 /* ================= CONFIGURACIÓN (edita esto) ================= */
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// 1) Configuración de tu proyecto Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDhv8r1wOeUOE5WPJnbOmp67nihsC_x_mU",
   authDomain: "finanzas-90b4e.firebaseapp.com",
@@ -311,12 +306,6 @@ const firebaseConfig = {
   messagingSenderId: "723787966262",
   appId: "1:723787966262:web:bba595bf84fc21003cf597"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 // 2) Nombre que se mostrará para cada correo (solo visual; el acceso real lo controlan las reglas de Firestore)
 const NOMBRES = {
   "afluker@uni.pe": "Anthony",
