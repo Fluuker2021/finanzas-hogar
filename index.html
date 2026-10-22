@@ -296,7 +296,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
 <script type="module">
 /* ================= CONFIGURACIÓN (edita esto) ================= */
-// 1) Pega aquí la configuración de tu proyecto Firebase (Consola > Configuración del proyecto > Tus apps > Web)
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -312,6 +311,9 @@ const firebaseConfig = {
   messagingSenderId: "723787966262",
   appId: "1:723787966262:web:bba595bf84fc21003cf597"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
