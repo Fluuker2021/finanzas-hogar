@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Solo estas dos cuentas pueden leer y escribir. Reemplaza los correos.
+    function permitido() {
+      return request.auth != null
+        && request.auth.token.email in [
+          'tu_correo@gmail.com',
+          'correo_esposa@gmail.com'
+        ];
+    }
+
+    match /movs/{id} {
+      allow read, write: if permitido();
+    }
+    match /tarjetas/{id} {
+      allow read, write: if permitido();
+    }
+
+    // Todo lo demás queda cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
