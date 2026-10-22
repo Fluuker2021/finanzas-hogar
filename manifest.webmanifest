@@ -1,12 +1,15 @@
 {
-  "name": "Finanzas del Hogar",
-  "short_name": "Finanzas",
-  "start_url": "./",
+  "name": "Agenda de Trabajo",
+  "short_name": "Agenda",
+  "description": "Agenda de trabajo en equipo, sincronizada entre computadora y celular.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#EEF1F4",
-  "theme_color": "#1F4FD1",
+  "background_color": "#f6f7f9",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }

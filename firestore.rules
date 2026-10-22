@@ -2,23 +2,111 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Solo estas dos cuentas pueden leer y escribir. Reemplaza los correos.
-    function permitido() {
-      return request.auth != null
-        && request.auth.token.email in [
-          'tu_correo@gmail.com',
-          'correo_esposa@gmail.com'
-        ];
+    // ---------------------------------------------------------------
+    // Ayudantes
+    // ---------------------------------------------------------------
+    function autenticado() { return request.auth != null; }
+
+    function miDoc() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
     }
 
-    match /movs/{id} {
-      allow read, write: if permitido();
-    }
-    match /tarjetas/{id} {
-      allow read, write: if permitido();
+    function esOwner() {
+      return autenticado() && miDoc().rol == 'owner';
     }
 
-    // Todo lo demás queda cerrado.
+    function esAdmin() {
+      return autenticado() && miDoc().rol == 'admin';
+    }
+
+    function gestiona(uid) {
+      return esAdmin() && (uid in miDoc().gestionados);
+    }
+
+    function esYo(uid) {
+      return autenticado() && request.auth.uid == uid;
+    }
+
+    // ---------------------------------------------------------------
+    // usuarios/{uid} — perfil, rol y, si es admin, a quién gestiona.
+    // Solo el owner crea cuentas y cambia roles/asignaciones (evita que
+    // alguien se auto-ascienda a admin). Cada quien puede actualizar sus
+    // propios campos no sensibles (ej. el token de notificaciones push).
+    // ---------------------------------------------------------------
+    match /usuarios/{uid} {
+      allow read: if esOwner() || esYo(uid) || gestiona(uid);
+
+      allow create: if esOwner();
+
+      allow update: if esOwner()
+        || (esYo(uid)
+            && request.resource.data.rol == resource.data.rol
+            && request.resource.data.gestionados == resource.data.gestionados
+            && request.resource.data.activo == resource.data.activo
+            && request.resource.data.nombre == resource.data.nombre
+            && request.resource.data.email == resource.data.email);
+
+      allow delete: if esOwner();
+    }
+
+    // ---------------------------------------------------------------
+    // tareas/{id}
+    // Lectura/escritura total: owner, o admin sobre su personal asignado.
+    // El propio responsable (staff) solo puede tocar el estado y las notas
+    // de SUS tareas; prioridad, fecha, proyecto, orden y a quién está
+    // asignada quedan reservados a quien la administra.
+    // ---------------------------------------------------------------
+    function soloCamposDeEjecucion() {
+      let antes = resource.data;
+      let despues = request.resource.data;
+      return despues.responsableUid == antes.responsableUid
+        && despues.proyecto == antes.proyecto
+        && despues.titulo == antes.titulo
+        && despues.prioridad == antes.prioridad
+        && despues.fechaLimite == antes.fechaLimite
+        && despues.orden == antes.orden
+        && despues.loteId == antes.loteId
+        && despues.creadoPorUid == antes.creadoPorUid;
+    }
+
+    match /tareas/{id} {
+      allow read: if esOwner()
+        || esYo(resource.data.responsableUid)
+        || gestiona(resource.data.responsableUid);
+
+      allow create: if autenticado()
+        && request.resource.data.creadoPorUid == request.auth.uid
+        && (esOwner()
+            || gestiona(request.resource.data.responsableUid)
+            || esYo(request.resource.data.responsableUid));
+
+      allow update: if esOwner()
+        || (gestiona(resource.data.responsableUid)
+            && (request.resource.data.responsableUid == resource.data.responsableUid
+                || gestiona(request.resource.data.responsableUid)))
+        || (esYo(resource.data.responsableUid) && soloCamposDeEjecucion());
+
+      // Incluye esYo(): terminar una tarea la borra (ver convención de la
+      // app), y eso lo debe poder hacer el propio responsable, no solo
+      // quien administra.
+      allow delete: if esOwner()
+        || gestiona(resource.data.responsableUid)
+        || esYo(resource.data.responsableUid);
+    }
+
+    // ---------------------------------------------------------------
+    // notificaciones/{id} — las crea únicamente la Cloud Function (con el
+    // SDK de administrador, que no pasa por estas reglas). Cada quien solo
+    // ve las suyas y únicamente puede marcarlas como leídas.
+    // ---------------------------------------------------------------
+    match /notificaciones/{id} {
+      allow read: if esYo(resource.data.paraUid);
+      allow update: if esYo(resource.data.paraUid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida']);
+      allow create, delete: if false;
+    }
+
+    // Todo lo demás queda cerrado por defecto.
     match /{document=**} {
       allow read, write: if false;
     }
